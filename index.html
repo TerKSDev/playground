@@ -43,7 +43,7 @@
          #start-screen {
             position: absolute;
             inset: 0;
-            background: rgba(0, 0, 0, 0.9);
+            background: #000000;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -273,7 +273,7 @@
                0 0 15px #ff0000,
                0 0 30px #ff0000;
             opacity: 0;
-            z-index: 15;
+            z-index: 200;
             pointer-events: none;
          }
          @keyframes slashHit {
@@ -289,6 +289,13 @@
                transform: translate(-50%, -50%) rotate(var(--deg)) scaleX(1);
                opacity: 0;
             }
+         }
+
+         @media (min-width: 768px) {
+            .status-bar, #subtitle-box {
+               margin-bottom: 85px;
+            }
+
          }
       </style>
    </head>
