@@ -1,0 +1,633 @@
+<!doctype html>
+<html>
+   <head>
+      <title>領域展開</title>
+      <script
+         src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+         crossorigin="anonymous"
+      ></script>
+      <script
+         src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
+         crossorigin="anonymous"
+      ></script>
+
+      <style>
+         body {
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+         }
+         #video-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+         }
+         video {
+            transform: scaleX(-1);
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+         }
+         canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+         }
+
+         /* 啟動畫面 */
+         #start-screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            transition: opacity 0.5s;
+         }
+
+         button {
+            margin-top: 80px;
+            width: calc(100% - 200px);
+            max-width: 530px;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+         }
+         button:hover {
+            background: #7000ff;
+            color: #fff;
+            box-shadow: 0 0 20px #7000ff;
+         }
+
+         /* 狀態與字幕 */
+         .status-bar {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 20;
+         }
+         .badge {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #333;
+            transition: 0.3s;
+         }
+
+         #subtitle-box {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            z-index: 20;
+            text-align: center;
+            min-width: 300px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            transition: all 0.3s ease;
+         }
+
+         #subtitle-box.gojo-highlight {
+            border-color: #00d4ff;
+            color: #00d4ff;
+            box-shadow: 0 0 20px #00d4ff;
+         }
+         #subtitle-box.sukuna-highlight {
+            border-color: #ff0000;
+            color: #ff0000;
+            box-shadow: 0 0 20px #ff0000;
+         }
+
+         /* ================= 領域特效層 (背景) ================= */
+         #domain-overlay {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+            transition: opacity 0.5s;
+         }
+
+         /* 圖片與漸層融合背景 */
+         .gojo-style {
+            background:
+               radial-gradient(
+                  circle at center,
+                  rgba(255, 255, 255, 0.2) 0%,
+                  rgba(26, 11, 46, 0.5) 40%,
+                  #000 80%
+               ),
+               url('gojo.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: lighten;
+         }
+
+         .sukuna-style {
+            background:
+               radial-gradient(
+                  circle at center,
+                  rgba(255, 0, 0, 0.2) 0%,
+                  rgba(51, 0, 0, 0.5) 40%,
+                  #000 80%
+               ),
+               url('sukuna.jpg');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: lighten;
+         }
+
+         .active#domain-overlay {
+            opacity: 1;
+            animation: domainExpand 2s forwards;
+         }
+         @keyframes domainExpand {
+            0% {
+               filter: brightness(3) contrast(2);
+            }
+            100% {
+               filter: brightness(1) contrast(1);
+            }
+         }
+
+         /* ================= 直書排版 (春聯效果) ================= */
+         .domain-prefix,
+         .domain-name {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%); /* 垂直居中 */
+            writing-mode: vertical-rl; /* 純正的直書模式 */
+            text-orientation: upright; /* 文字保持正向 */
+            font-size: 6vw; /* 使用視窗寬度單位，確保在不同螢幕都不會破版 */
+            font-weight: 900;
+            letter-spacing: 3vh; /* 字距拉開 */
+            white-space: nowrap; /* 確保不會因為高度不夠而折行 */
+            margin: 0;
+         }
+
+         /* 定位：左聯與右聯 */
+         .domain-prefix {
+            left: 10%;
+         } /* 左邊顯示：領域展開 */
+         .domain-name {
+            right: 10%;
+         } /* 右邊顯示：術式名稱 */
+
+         /* 每個單字元的基礎容器 */
+         .char-span {
+            opacity: 0; /* 預設隱藏，等待動畫觸發 */
+            display: inline-block; /* 在直書模式下，必須是 inline-block 才能正確套用動畫變形 */
+         }
+
+         /* ================= 五條悟：空間錯位發光字體 ================= */
+         .gojo-style .domain-prefix,
+         .gojo-style .domain-name {
+            color: #fff;
+            text-shadow:
+               0 0 20px #7000ff,
+               0 0 40px #00d4ff,
+               0 0 60px #00d4ff;
+         }
+         .gojo-style .char-span {
+            animation: gojoReveal 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+         }
+         @keyframes gojoReveal {
+            0% {
+               opacity: 0;
+               transform: scale(2) rotate(15deg);
+               filter: blur(10px);
+            }
+            50% {
+               opacity: 1;
+               transform: scale(1.1) rotate(-5deg);
+               filter: blur(2px);
+               text-shadow:
+                  -5px 0 #7000ff,
+                  5px 0 #00d4ff;
+            }
+            100% {
+               opacity: 1;
+               transform: scale(1) rotate(0deg);
+               filter: blur(0);
+            }
+         }
+
+         /* ================= 宿儺：俐落血紅斬擊字體 ================= */
+         .sukuna-style .domain-prefix,
+         .sukuna-style .domain-name {
+            color: #ff0a0a;
+            text-shadow:
+               2px 2px 0px #000,
+               -2px -2px 0px #000,
+               0 0 30px #ff0000,
+               0 0 50px #8a0000;
+         }
+         .sukuna-style .char-span {
+            animation: sukunaReveal 0.8s cubic-bezier(0.1, 1, 0.1, 1) forwards;
+         }
+         @keyframes sukunaReveal {
+            0% {
+               opacity: 0;
+               transform: scale(1.5);
+               filter: brightness(3);
+            }
+            100% {
+               opacity: 1;
+               transform: scale(1);
+               filter: brightness(1);
+            }
+         }
+
+         /* ================= 宿儺專屬斬擊特效 ================= */
+         .slash {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 150vw;
+            height: 4px;
+            background: #fff;
+            box-shadow:
+               0 0 15px #ff0000,
+               0 0 30px #ff0000;
+            opacity: 0;
+            z-index: 15;
+            pointer-events: none;
+         }
+         @keyframes slashHit {
+            0% {
+               transform: translate(-50%, -50%) rotate(var(--deg)) scaleX(0);
+               opacity: 1;
+            }
+            30% {
+               transform: translate(-50%, -50%) rotate(var(--deg)) scaleX(1);
+               opacity: 1;
+            }
+            100% {
+               transform: translate(-50%, -50%) rotate(var(--deg)) scaleX(1);
+               opacity: 0;
+            }
+         }
+      </style>
+   </head>
+   <body>
+      <div id="start-screen">
+         <h1 style="margin: 0; font-size: 60px">呪術回戦：領域展開</h1>
+         <p style="font-size: 18px">Chromeを使用してください！</p>
+         <button id="start-btn">授権して始める</button>
+      </div>
+
+      <div id="video-container">
+         <video id="webcam" autoplay playsinline muted></video>
+         <canvas id="output_canvas"></canvas>
+
+         <div id="domain-overlay">
+            <div class="domain-prefix" id="text-prefix"></div>
+            <div class="domain-name" id="text-name"></div>
+         </div>
+
+         <div id="subtitle-box">システムが起動中...</div>
+         <div class="status-bar">
+            <div id="gesture-status" class="badge">
+               ジェスチャー検出：未結印
+            </div>
+         </div>
+      </div>
+
+      <script>
+         const videoElement = document.getElementById('webcam');
+         const canvasElement = document.getElementById('output_canvas');
+         const canvasCtx = canvasElement.getContext('2d');
+         const overlay = document.getElementById('domain-overlay');
+         const gestureStatus = document.getElementById('gesture-status');
+         const subtitleBox = document.getElementById('subtitle-box');
+         const startBtn = document.getElementById('start-btn');
+
+         let isDomainActive = false;
+         let currentGesture = 'none';
+         let isListening = false;
+         let recognition;
+
+         // ================= 1. 啟動與防卡頓處理 =================
+         async function startApp() {
+            try {
+               const stream = await navigator.mediaDevices.getUserMedia({
+                  video: { width: 1280, height: 720 },
+                  audio: true,
+               });
+               videoElement.srcObject = stream;
+
+               initSpeech();
+               initHands();
+
+               let isProcessing = false;
+               let lastProcessTime = 0;
+               const FPS_LIMIT = 15;
+
+               async function processFrame() {
+                  const now = performance.now();
+                  if (
+                     videoElement.readyState >= 2 &&
+                     !isProcessing &&
+                     now - lastProcessTime > 1000 / FPS_LIMIT
+                  ) {
+                     isProcessing = true;
+                     lastProcessTime = now;
+                     try {
+                        await hands.send({ image: videoElement });
+                     } catch (err) {
+                        console.error('ジェスチャー検出失敗：', err);
+                     }
+                     isProcessing = false;
+                  }
+                  requestAnimationFrame(processFrame);
+               }
+               processFrame();
+            } catch (err) {
+               alert('起動失敗！原因：' + err.message);
+            }
+         }
+
+         // ================= 2. 語音辨識 =================
+         function initSpeech() {
+            const SpeechRecognition =
+               window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return alert('Chromeを使用してください！');
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ja-JP';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+               isListening = true;
+               subtitleBox.innerText = 'システムが接続しました。';
+            };
+
+            recognition.onresult = (event) => {
+               let interimTranscript = '';
+               let finalTranscript = '';
+
+               for (let i = event.resultIndex; i < event.results.length; ++i) {
+                  if (event.results[i].isFinal)
+                     finalTranscript += event.results[i][0].transcript;
+                  else interimTranscript += event.results[i][0].transcript;
+               }
+
+               const currentText = finalTranscript || interimTranscript;
+               if (currentText && !isDomainActive) {
+                  subtitleBox.innerText = `「 ${currentText} 」`;
+                  checkTrigger(currentText);
+               }
+            };
+
+            recognition.onerror = (e) => {
+               if (e.error !== 'aborted')
+                  subtitleBox.innerText = `音声干渉：${e.error}`;
+            };
+            recognition.onend = () => {
+               if (isListening)
+                  setTimeout(() => {
+                     try {
+                        recognition.start();
+                     } catch (e) {}
+                  }, 500);
+            };
+            try {
+               recognition.start();
+            } catch (e) {}
+         }
+
+         // ================= 3. 觸發與逐字動畫 =================
+         function checkTrigger(spokenText) {
+            if (currentGesture === 'none') return;
+            const text = spokenText.toLowerCase().replace(/\s+/g, '');
+
+            const hasDomain =
+               text.includes('領域') ||
+               text.includes('りょういき') ||
+               text.includes('ryoiki') ||
+               text.includes('tenkai') ||
+               text.includes('展开') ||
+               text.includes('展開');
+            const hasGojo =
+               text.includes('無量') ||
+               text.includes('むりょう') ||
+               text.includes('muryo') ||
+               text.includes('空処') ||
+               text.includes('空處') ||
+               text.includes('kusho');
+            const hasSukuna =
+               text.includes('伏魔') ||
+               text.includes('ふくま') ||
+               text.includes('fukuma') ||
+               text.includes('御廚子') ||
+               text.includes('御厨子') ||
+               text.includes('mizushi');
+
+            if (currentGesture === 'gojo' && (hasDomain || hasGojo))
+               triggerDomain('gojo');
+            else if (currentGesture === 'sukuna' && (hasDomain || hasSukuna))
+               triggerDomain('sukuna');
+         }
+
+         // 輔助函數：拆解字串，逐字生成 span 並加上「慢速延遲」
+         function animateText(elementId, text, delayOffset = 0) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            text.split('').forEach((char, index) => {
+               const span = document.createElement('span');
+               span.className = 'char-span';
+               span.innerText = char;
+               // 【速度變慢】：每個字間隔 0.5 秒出現 (原本是 0.2 秒)
+               span.style.animationDelay = `${delayOffset + index * 0.5}s`;
+               container.appendChild(span);
+            });
+         }
+
+         function triggerDomain(type) {
+            // 1. 立刻鎖定狀態，防止語音重複觸發
+            isDomainActive = true;
+
+            if (type === 'gojo') {
+               subtitleBox.classList.add('gojo-highlight');
+            }
+
+            if (type === 'sukuna') {
+               subtitleBox.classList.add('sukuna-highlight');
+            }
+
+            // 延遲期間的小彩蛋提示
+            subtitleBox.innerText = '呪力解放中...';
+
+            // ==========================================
+            // 【延遲設定區】：設定念完後要等多久才展開
+            // 1500 代表 1.5 秒，如果你想等 2 秒就改成 2000
+            // ==========================================
+            const delayTime = 2000;
+
+            setTimeout(() => {
+               // 2. 延遲時間到！瞬間顯示 Overlay 和背景
+               overlay.className = 'active';
+               const prefixText = '領域展開';
+
+               if (type === 'gojo') {
+                  overlay.classList.add('gojo-style');
+                  subtitleBox.innerText = '「 領域展開：無量空處！」';
+
+                  // 左邊從 0 秒開始，右邊等 2.5 秒後浮現
+                  animateText('text-prefix', prefixText, 0);
+                  animateText('text-name', '無量空処', 2.5);
+               } else if (type === 'sukuna') {
+                  overlay.classList.add('sukuna-style');
+                  subtitleBox.innerText = '「 領域展開：伏魔御廚子！」';
+
+                  // 右邊 2.0 秒開始跑
+                  animateText('text-prefix', prefixText, 0);
+                  animateText('text-name', '伏魔御厨子', 2.0);
+                  createSlashes();
+               }
+
+               // 3. 領域持續時間 (展開後 10 秒才關閉)
+               setTimeout(() => {
+                  // 徹底清除所有 class，包含 active, gojo-style, sukuna-style
+                  overlay.className = '';
+
+                  subtitleBox.classList.remove(
+                     'gojo-highlight',
+                     'sukuna-highlight',
+                  );
+                  subtitleBox.innerText = '呪力冷却完了...';
+
+                  // 清空文字，等待下次詠唱
+                  document.getElementById('text-prefix').innerHTML = '';
+                  document.getElementById('text-name').innerHTML = '';
+
+                  isDomainActive = false; // 解除鎖定
+               }, 10000);
+            }, delayTime); // 啟動我們上面設定的延遲
+         }
+
+         function createSlashes() {
+            const container = document.getElementById('video-container');
+            for (let i = 0; i < 8; i++) {
+               setTimeout(() => {
+                  const slash = document.createElement('div');
+                  slash.className = 'slash';
+                  const angle = Math.random() * 180 - 90;
+                  slash.style.setProperty('--deg', `${angle}deg`);
+                  slash.style.animation = `slashHit 0.25s ease-out forwards`;
+                  container.appendChild(slash);
+                  setTimeout(() => slash.remove(), 300);
+               }, i * 150);
+            }
+         }
+
+         // ================= 4. 手勢辨識 =================
+         let hands;
+         function initHands() {
+            hands = new Hands({
+               locateFile: (file) =>
+                  `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+            });
+            hands.setOptions({
+               maxNumHands: 2,
+               modelComplexity: 1,
+               minDetectionConfidence: 0.5,
+               minTrackingConfidence: 0.5,
+            });
+
+            hands.onResults((results) => {
+               canvasElement.width = videoElement.videoWidth;
+               canvasElement.height = videoElement.videoHeight;
+               canvasCtx.save();
+               canvasCtx.clearRect(
+                  0,
+                  0,
+                  canvasElement.width,
+                  canvasElement.height,
+               );
+
+               currentGesture = 'none';
+
+               if (
+                  results.multiHandLandmarks &&
+                  results.multiHandLandmarks.length > 0
+               ) {
+                  results.multiHandLandmarks.forEach((landmarks) => {
+                     const isExtended =
+                        landmarks[8].y < landmarks[6].y &&
+                        landmarks[12].y < landmarks[10].y;
+                     const isCurled =
+                        landmarks[16].y > landmarks[14].y &&
+                        landmarks[20].y > landmarks[18].y;
+                     const dist = Math.sqrt(
+                        Math.pow(landmarks[8].x - landmarks[12].x, 2) +
+                           Math.pow(landmarks[8].y - landmarks[12].y, 2),
+                     );
+
+                     if (isExtended && isCurled && dist < 0.1)
+                        currentGesture = 'gojo';
+                     drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+                        color: '#00FF00',
+                        lineWidth: 3,
+                     });
+                  });
+
+                  if (results.multiHandLandmarks.length === 2) {
+                     const h1 = results.multiHandLandmarks[0];
+                     const h2 = results.multiHandLandmarks[1];
+                     const palmDist = Math.sqrt(
+                        Math.pow(h1[1].x - h2[1].x, 2) +
+                           Math.pow(h1[1].y - h2[1].y, 2),
+                     );
+                     if (palmDist < 0.2) currentGesture = 'sukuna';
+                  }
+               }
+
+               if (currentGesture === 'gojo') {
+                  gestureStatus.innerText = 'ジェスチャー検出：無量空処';
+                  gestureStatus.style.borderColor = '#00d4ff';
+                  gestureStatus.style.color = '#00d4ff';
+               } else if (currentGesture === 'sukuna') {
+                  gestureStatus.innerText = 'ジェスチャー検出：伏魔御厨子';
+                  gestureStatus.style.borderColor = '#ff0000';
+                  gestureStatus.style.color = '#ff0000';
+               } else {
+                  gestureStatus.innerText = 'ジェスチャー検出：未結印';
+                  gestureStatus.style.borderColor = '#333';
+                  gestureStatus.style.color = '#fff';
+               }
+               canvasCtx.restore();
+            });
+         }
+
+         startBtn.addEventListener('click', () => {
+            document.getElementById('start-screen').style.display = 'none';
+            startApp();
+         });
+      </script>
+   </body>
+</html>
