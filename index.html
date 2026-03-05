@@ -2,6 +2,10 @@
 <html>
    <head>
       <title>領域展開</title>
+      <link
+         rel="stylesheet"
+         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=assignment"
+      />
       <script
          src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
          crossorigin="anonymous"
@@ -50,6 +54,115 @@
             justify-content: center;
             z-index: 50;
             transition: opacity 0.5s;
+         }
+
+         /* ================= 左上角：Update Logs 樣式 ================= */
+         .update-logs {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: #1a1a1a;
+            border: 1px solid;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #ddd;
+            font-size: 0.95rem;
+            text-align: left;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            min-width: fit-content; /* 固定寬度，避免展開時變形 */
+         }
+         .log-title {
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0;
+            letter-spacing: 2px;
+            cursor: pointer; /* 滑鼠移過去變成手指 */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: color 0.3s;
+         }
+         .log-title:hover {
+            color: #00d4ff; /* 滑鼠懸停發光 */
+         }
+         #log-arrow {
+            font-size: 0.7rem;
+            transition: transform 0.3s ease; /* 箭頭旋轉動畫 */
+         }
+
+         /* 列表預設隱藏 (高度為 0，透明度為 0) */
+         .log-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden; /* 隱藏超出的部分 */
+            transition:
+               max-height 0.4s ease,
+               opacity 0.4s ease,
+               margin-top 0.4s ease;
+         }
+         .log-list li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+            font-size: 12px;
+         }
+         .version {
+            color: #00d4ff;
+            font-weight: bold;
+            margin-right: 6px;
+         }
+
+         /* 當加入 .show 類別時，觸發展開動畫 */
+         .log-list.show {
+            max-height: 200px; /* 展開的最大高度 */
+            opacity: 1;
+            margin-top: 15px; /* 展開時與標題拉開距離 */
+         }
+         /* 標題展開時，箭頭旋轉 180 度 */
+         .log-title.show #log-arrow {
+            transform: rotate(180deg);
+         }
+
+         .log-title.show {
+            border-bottom: 2px solid #aaaaaa;
+            padding-bottom: 8px;
+         }
+
+         /* ================= 右上角：GitHub 按鈕樣式 ================= */
+         .github-btn {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+
+            /* 覆蓋原本 button 的置中設定 */
+            margin-top: 0;
+            width: auto;
+            max-width: none;
+
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px; /* 圓角膠囊形狀 */
+            font-size: 1rem;
+            font-family: monospace;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+         }
+         .github-btn:hover {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            transform: translateY(-2px); /* 懸停時稍微往上浮 */
          }
 
          button {
@@ -110,6 +223,7 @@
             transition: all 0.3s ease;
          }
 
+         /* 各領域專屬字幕發光 */
          #subtitle-box.gojo-highlight {
             border-color: #00d4ff;
             color: #00d4ff;
@@ -120,8 +234,13 @@
             color: #ff0000;
             box-shadow: 0 0 20px #ff0000;
          }
+         #subtitle-box.jogo-highlight {
+            border-color: #ff8800;
+            color: #ffaa00;
+            box-shadow: 0 0 20px #ff5500;
+         }
 
-         /* ================= 領域特效層 (背景) ================= */
+         /* ================= 領域特效層 ================= */
          #domain-overlay {
             position: absolute;
             inset: 0;
@@ -145,7 +264,6 @@
             background-position: center;
             background-blend-mode: lighten;
          }
-
          .sukuna-style {
             background:
                radial-gradient(
@@ -155,6 +273,20 @@
                   #000 80%
                ),
                url('sukuna.jpg');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: lighten;
+         }
+         /* 漏壺專屬岩漿背景 */
+         .jogo-style {
+            background:
+               radial-gradient(
+                  circle at center,
+                  rgba(255, 100, 0, 0.3) 0%,
+                  rgba(80, 10, 0, 0.6) 40%,
+                  #000 80%
+               ),
+               url('jogo.png');
             background-size: cover;
             background-position: center;
             background-blend-mode: lighten;
@@ -173,36 +305,32 @@
             }
          }
 
-         /* ================= 直書排版 (春聯效果) ================= */
+         /* ================= 直書排版 ================= */
          .domain-prefix,
          .domain-name {
             position: absolute;
             top: 50%;
-            transform: translateY(-50%); /* 垂直居中 */
-            writing-mode: vertical-rl; /* 純正的直書模式 */
-            text-orientation: upright; /* 文字保持正向 */
-            font-size: 6vw; /* 使用視窗寬度單位，確保在不同螢幕都不會破版 */
+            transform: translateY(-50%);
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            font-size: 6vw;
             font-weight: 900;
-            letter-spacing: 3vh; /* 字距拉開 */
-            white-space: nowrap; /* 確保不會因為高度不夠而折行 */
+            letter-spacing: 3vh;
+            white-space: nowrap;
             margin: 0;
          }
-
-         /* 定位：左聯與右聯 */
          .domain-prefix {
             left: 10%;
-         } /* 左邊顯示：領域展開 */
+         }
          .domain-name {
             right: 10%;
-         } /* 右邊顯示：術式名稱 */
-
-         /* 每個單字元的基礎容器 */
+         }
          .char-span {
-            opacity: 0; /* 預設隱藏，等待動畫觸發 */
-            display: inline-block; /* 在直書模式下，必須是 inline-block 才能正確套用動畫變形 */
+            opacity: 0;
+            display: inline-block;
          }
 
-         /* ================= 五條悟：空間錯位發光字體 ================= */
+         /* ================= 1. 五條悟 字體 ================= */
          .gojo-style .domain-prefix,
          .gojo-style .domain-name {
             color: #fff;
@@ -235,7 +363,7 @@
             }
          }
 
-         /* ================= 宿儺：俐落血紅斬擊字體 ================= */
+         /* ================= 2. 宿儺 字體 ================= */
          .sukuna-style .domain-prefix,
          .sukuna-style .domain-name {
             color: #ff0a0a;
@@ -261,7 +389,33 @@
             }
          }
 
-         /* ================= 宿儺專屬斬擊特效 ================= */
+         /* ================= 3. 漏壺 字體 (高溫燃燒感) ================= */
+         .jogo-style .domain-prefix,
+         .jogo-style .domain-name {
+            color: #ffcc00;
+            text-shadow:
+               2px 2px 0px #000,
+               -2px -2px 0px #000,
+               0 0 30px #ff4400,
+               0 0 50px #cc0000;
+         }
+         .jogo-style .char-span {
+            animation: jogoReveal 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+         }
+         @keyframes jogoReveal {
+            0% {
+               opacity: 0;
+               transform: scale(0.8) translateY(30px);
+               filter: blur(8px);
+            }
+            100% {
+               opacity: 1;
+               transform: scale(1) translateY(0);
+               filter: blur(0);
+            }
+         }
+
+         /* 宿儺專屬斬擊特效 */
          .slash {
             position: absolute;
             top: 50%;
@@ -273,7 +427,7 @@
                0 0 15px #ff0000,
                0 0 30px #ff0000;
             opacity: 0;
-            z-index: 200;
+            z-index: 999;
             pointer-events: none;
          }
          @keyframes slashHit {
@@ -301,9 +455,103 @@
    </head>
    <body>
       <div id="start-screen">
-         <h1 style="margin: 0; font-size: 60px">呪術回戦：領域展開</h1>
-         <p style="font-size: 18px">Chromeを使用してください！</p>
+         <div class="update-logs">
+            <div class="log-title" id="log-toggle">
+               <div
+                  style="
+                     display: flex;
+                     align-items: center;
+                     gap: 12px;
+                     cursor: pointer;
+                  "
+               >
+                  <span
+                     class="material-symbols-outlined"
+                     style="font-size: 18px"
+                  >
+                     assignment
+                  </span>
+                  <span>Update Logs</span>
+               </div>
+
+               <span id="log-arrow">▼</span>
+            </div>
+            <ul class="log-list" id="log-content">
+               <li>
+                  <span class="version">v2.0</span>Major Update: Added Jogo &
+                  Megumi Domain Expansions
+               </li>
+               <li>
+                  <span class="version">v1.4</span>Added UI for Update Logs &
+                  GitHub source link
+               </li>
+               <li>
+                  <span class="version">v1.3</span>Improved accuracy for
+                  two-handed sign recognition
+               </li>
+               <li>
+                  <span class="version">v1.2</span>Refined gesture detection
+                  logic for Gojo & Sukuna
+               </li>
+               <li>
+                  <span class="version">v1.1</span>Added cinematic visual
+                  effects for domains
+               </li>
+               <li>
+                  <span class="version">v1.0</span>Initial Release: Gojo &
+                  Sukuna Domains
+               </li>
+            </ul>
+         </div>
+
+         <button
+            class="github-btn"
+            onclick="
+               window.open('https://github.com/TerKSDev/playground', '_blank')
+            "
+         >
+            <svg
+               viewBox="0 0 24 24"
+               width="20"
+               height="20"
+               stroke="currentColor"
+               stroke-width="2"
+               fill="none"
+               stroke-linecap="round"
+               stroke-linejoin="round"
+            >
+               <path
+                  d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+               ></path>
+            </svg>
+            Get Source Code
+         </button>
+
+         <h1
+            style="
+               margin: 0;
+               font-size: 60px;
+               text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            "
+         >
+            呪術回戦：領域展開
+         </h1>
+         <p style="font-size: 18px; color: #ccc">Chromeを使用してください！</p>
          <button id="start-btn">授権して始める</button>
+
+         <div
+            style="
+               position: absolute;
+               bottom: 8px;
+               left: 8px;
+               font-size: 12px;
+               display: flex;
+               gap: 6px;
+            "
+         >
+            <span style="font-weight: bold">Current Version:</span>
+            <span>v2.0</span>
+         </div>
       </div>
 
       <div id="video-container">
@@ -336,6 +584,18 @@
          let currentGesture = 'none';
          let isListening = false;
          let recognition;
+
+         // ================= UI 互動邏輯 =================
+         document.addEventListener('DOMContentLoaded', () => {
+            const logToggle = document.getElementById('log-toggle');
+            const logContent = document.getElementById('log-content');
+
+            logToggle.addEventListener('click', () => {
+               // 切換 .show 類別來觸發 CSS 動畫
+               logContent.classList.toggle('show');
+               logToggle.classList.toggle('show');
+            });
+         });
 
          // ================= 1. 啟動與防卡頓處理 =================
          async function startApp() {
@@ -396,13 +656,11 @@
             recognition.onresult = (event) => {
                let interimTranscript = '';
                let finalTranscript = '';
-
                for (let i = event.resultIndex; i < event.results.length; ++i) {
                   if (event.results[i].isFinal)
                      finalTranscript += event.results[i][0].transcript;
                   else interimTranscript += event.results[i][0].transcript;
                }
-
                const currentText = finalTranscript || interimTranscript;
                if (currentText && !isDomainActive) {
                   subtitleBox.innerText = `「 ${currentText} 」`;
@@ -439,6 +697,7 @@
                text.includes('tenkai') ||
                text.includes('展开') ||
                text.includes('展開');
+
             const hasGojo =
                text.includes('無量') ||
                text.includes('むりょう') ||
@@ -446,6 +705,7 @@
                text.includes('空処') ||
                text.includes('空處') ||
                text.includes('kusho');
+
             const hasSukuna =
                text.includes('伏魔') ||
                text.includes('ふくま') ||
@@ -454,13 +714,22 @@
                text.includes('御厨子') ||
                text.includes('mizushi');
 
+            const hasJogo =
+               text.includes('蓋棺') ||
+               text.includes('がいかん') ||
+               text.includes('gaikan') ||
+               text.includes('鉄囲山') ||
+               text.includes('てっちせん') ||
+               text.includes('tecchisen');
+
             if (currentGesture === 'gojo' && (hasDomain || hasGojo))
                triggerDomain('gojo');
             else if (currentGesture === 'sukuna' && (hasDomain || hasSukuna))
                triggerDomain('sukuna');
+            else if (currentGesture === 'jogo' && (hasDomain || hasJogo))
+               triggerDomain('jogo');
          }
 
-         // 輔助函數：拆解字串，逐字生成 span 並加上「慢速延遲」
          function animateText(elementId, text, delayOffset = 0) {
             const container = document.getElementById(elementId);
             container.innerHTML = '';
@@ -468,73 +737,57 @@
                const span = document.createElement('span');
                span.className = 'char-span';
                span.innerText = char;
-               // 【速度變慢】：每個字間隔 0.5 秒出現 (原本是 0.2 秒)
                span.style.animationDelay = `${delayOffset + index * 0.5}s`;
                container.appendChild(span);
             });
          }
 
          function triggerDomain(type) {
-            // 1. 立刻鎖定狀態，防止語音重複觸發
             isDomainActive = true;
+            subtitleBox.innerText = '⚡ 呪力解放中... ⚡';
 
-            if (type === 'gojo') {
-               subtitleBox.classList.add('gojo-highlight');
-            }
-
-            if (type === 'sukuna') {
+            if (type === 'gojo') subtitleBox.classList.add('gojo-highlight');
+            if (type === 'sukuna')
                subtitleBox.classList.add('sukuna-highlight');
-            }
+            if (type === 'jogo') subtitleBox.classList.add('jogo-highlight');
 
-            // 延遲期間的小彩蛋提示
-            subtitleBox.innerText = '呪力解放中...';
-
-            // ==========================================
-            // 【延遲設定區】：設定念完後要等多久才展開
-            // 1500 代表 1.5 秒，如果你想等 2 秒就改成 2000
-            // ==========================================
             const delayTime = 2000;
 
             setTimeout(() => {
-               // 2. 延遲時間到！瞬間顯示 Overlay 和背景
                overlay.className = 'active';
                const prefixText = '領域展開';
 
                if (type === 'gojo') {
                   overlay.classList.add('gojo-style');
-                  subtitleBox.innerText = '「 領域展開：無量空處！」';
-
-                  // 左邊從 0 秒開始，右邊等 2.5 秒後浮現
+                  subtitleBox.innerText = '「 領域展開：無量空処！」';
                   animateText('text-prefix', prefixText, 0);
                   animateText('text-name', '無量空処', 2.5);
                } else if (type === 'sukuna') {
                   overlay.classList.add('sukuna-style');
-                  subtitleBox.innerText = '「 領域展開：伏魔御廚子！」';
-
-                  // 右邊 2.0 秒開始跑
+                  subtitleBox.innerText = '「 領域展開：伏魔御厨子！」';
                   animateText('text-prefix', prefixText, 0);
                   animateText('text-name', '伏魔御厨子', 2.0);
                   createSlashes();
+               } else if (type === 'jogo') {
+                  overlay.classList.add('jogo-style');
+                  subtitleBox.innerText = '「 領域展開：蓋棺鉄囲山！」';
+                  animateText('text-prefix', prefixText, 0);
+                  animateText('text-name', '蓋棺鉄囲山', 2.5);
                }
 
-               // 3. 領域持續時間 (展開後 10 秒才關閉)
                setTimeout(() => {
-                  // 徹底清除所有 class，包含 active, gojo-style, sukuna-style
                   overlay.className = '';
-
                   subtitleBox.classList.remove(
                      'gojo-highlight',
                      'sukuna-highlight',
+                     'jogo-highlight',
                   );
                   subtitleBox.innerText = '呪力冷却完了...';
-
-                  // 清空文字，等待下次詠唱
                   document.getElementById('text-prefix').innerHTML = '';
                   document.getElementById('text-name').innerHTML = '';
-
-                  isDomainActive = false; // 解除鎖定
+                  isDomainActive = false;
                }, 10000);
-            }, delayTime); // 啟動我們上面設定的延遲
+            }, delayTime);
          }
 
          function createSlashes() {
@@ -543,8 +796,10 @@
                setTimeout(() => {
                   const slash = document.createElement('div');
                   slash.className = 'slash';
-                  const angle = Math.random() * 180 - 90;
-                  slash.style.setProperty('--deg', `${angle}deg`);
+                  slash.style.setProperty(
+                     '--deg',
+                     `${Math.random() * 180 - 90}deg`,
+                  );
                   slash.style.animation = `slashHit 0.25s ease-out forwards`;
                   container.appendChild(slash);
                   setTimeout(() => slash.remove(), 300);
@@ -552,22 +807,26 @@
             }
          }
 
-         // ================= 4. 手勢辨識 =================
-         // ================= 4. 手勢辨識 (極限寬容版) =================
+         // ================= 4. 手勢辨識 (小指精準區分版) =================
          let hands;
          function initHands() {
             hands = new Hands({
                locateFile: (file) =>
                   `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
             });
-
-            // 【強化點 1】：降低自信度門檻，讓 AI 即使看不清楚交疊的手指，也「硬猜」它是兩隻手
             hands.setOptions({
                maxNumHands: 2,
                modelComplexity: 1,
-               minDetectionConfidence: 0.4, // 從 0.5 降到 0.4
-               minTrackingConfidence: 0.4, // 從 0.5 降到 0.4
+               minDetectionConfidence: 0.4, // 降低門檻，容忍雙手重疊
+               minTrackingConfidence: 0.4,
             });
+
+            // 輔助計算兩點距離
+            function getDist(p1, p2) {
+               return Math.sqrt(
+                  Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2),
+               );
+            }
 
             hands.onResults((results) => {
                canvasElement.width = videoElement.videoWidth;
@@ -581,92 +840,101 @@
                );
 
                currentGesture = 'none';
-
                const handCount = results.multiHandLandmarks
                   ? results.multiHandLandmarks.length
                   : 0;
 
-               // ================= 單手模式：五條悟 =================
                if (handCount === 1) {
-                  const landmarks = results.multiHandLandmarks[0];
+                  // ================= 單手：五條悟 =================
+                  const lm = results.multiHandLandmarks[0];
 
-                  const isIndexStraight = landmarks[8].y < landmarks[6].y;
-                  const isMiddleStraight = landmarks[12].y < landmarks[10].y;
-                  const isRingCurled = landmarks[16].y > landmarks[14].y;
-                  const isPinkyCurled = landmarks[20].y > landmarks[18].y;
+                  const isIndexUp = lm[8].y < lm[6].y;
+                  const isMiddleUp = lm[12].y < lm[10].y;
+                  const isRingDown = lm[16].y > lm[14].y;
+                  const isPinkyDown = lm[20].y > lm[18].y;
 
-                  // 放寬大拇指距離，只要大於 0.03 就算張開
-                  const thumbDist = Math.sqrt(
-                     Math.pow(landmarks[4].x - landmarks[6].x, 2) +
-                        Math.pow(landmarks[4].y - landmarks[6].y, 2),
-                  );
-                  // 放寬食指中指交叉的容錯距離
-                  const fingerDist = Math.sqrt(
-                     Math.pow(landmarks[8].x - landmarks[12].x, 2) +
-                        Math.pow(landmarks[8].y - landmarks[12].y, 2),
-                  );
+                  const isThumbOpen = getDist(lm[4], lm[5]) > 0.05;
+                  const isFingersTogether = getDist(lm[8], lm[12]) < 0.08;
 
                   if (
-                     isIndexStraight &&
-                     isMiddleStraight &&
-                     isRingCurled &&
-                     isPinkyCurled &&
-                     thumbDist > 0.03 &&
-                     fingerDist < 0.1
+                     isIndexUp &&
+                     isMiddleUp &&
+                     isRingDown &&
+                     isPinkyDown &&
+                     isThumbOpen &&
+                     isFingersTogether
                   ) {
                      currentGesture = 'gojo';
                   }
 
-                  drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+                  drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, {
                      color: '#00D4FF',
                      lineWidth: 3,
                   });
-                  drawLandmarks(canvasCtx, landmarks, {
-                     color: '#FFFFFF',
-                     lineWidth: 1,
-                  });
-
-                  // ================= 雙手模式：宿儺 (究極強化版) =================
                } else if (handCount === 2) {
+                  // ================= 雙手：宿儺 vs 漏壺 =================
                   const h1 = results.multiHandLandmarks[0];
                   const h2 = results.multiHandLandmarks[1];
 
-                  // 【強化點 2】：取消「手指必須絕對筆直」的要求
-                  // 因為合十時手指難免彎曲。我們改判斷「指尖(8)的位置高於掌根(0)」即可，代表手是朝上的。
-                  const h1Up = h1[8].y < h1[0].y;
-                  const h2Up = h2[8].y < h2[0].y;
+                  // 判定雙手是否靠近
+                  const wristDist = getDist(h1[0], h2[0]);
+                  const knuckleDist = getDist(h1[5], h2[5]);
 
-                  // 計算兩手掌根 (0) 的距離
-                  const wristDist = Math.sqrt(
-                     Math.pow(h1[0].x - h2[0].x, 2) +
-                        Math.pow(h1[0].y - h2[0].y, 2),
-                  );
+                  if (wristDist < 0.35 || knuckleDist < 0.25) {
+                     // 取得各個指尖的距離
+                     const pinkyDist = getDist(h1[20], h2[20]); // 小指距離
+                     const ringDist = getDist(h1[16], h2[16]); // 無名指距離
 
-                  // 計算兩手大拇指根部 (1) 的距離 (合十時這裡非常近)
-                  const thumbBaseDist = Math.sqrt(
-                     Math.pow(h1[1].x - h2[1].x, 2) +
-                        Math.pow(h1[1].y - h2[1].y, 2),
-                  );
+                     // 判斷手指是否朝上 (指尖 y < 掌根 y)
+                     const h1IndexUp = h1[8].y < h1[5].y;
+                     const h2IndexUp = h2[8].y < h2[5].y;
+                     const h1RingUp = h1[16].y < h1[13].y;
+                     const h2RingUp = h2[16].y < h2[13].y;
 
-                  // 【強化點 3】：大幅放寬合十的距離判定。
-                  // MediaPipe 有時會把貼合的兩手判定得比較遠，所以容錯值調大 (0.35)
-                  if (
-                     h1Up &&
-                     h2Up &&
-                     (wristDist < 0.35 || thumbBaseDist < 0.3)
-                  ) {
-                     currentGesture = 'sukuna';
+                     // 判斷食指/中指是否彎曲交扣 (指尖往下折，y 大於掌根)
+                     const isIndexCurled =
+                        h1[8].y > h1[5].y || h2[8].y > h2[5].y;
+
+                     // --------------------------------------------------
+                     // 🔥 漏壺 (蓋棺鉄囲山) 嚴格判定：
+                     // 1. 無名指尖端碰觸 (距離 < 0.08)
+                     // 2. 無名指朝上 (形成尖頭)
+                     // 3. 小指分開 (距離 > 0.1)
+                     // 4. 食指與中指彎曲交扣 (不能像宿儺一樣直立)
+                     // --------------------------------------------------
+                     if (
+                        ringDist < 0.08 &&
+                        h1RingUp &&
+                        h2RingUp &&
+                        pinkyDist > 0.1 &&
+                        isIndexCurled
+                     ) {
+                        currentGesture = 'jogo';
+                     }
+                     // --------------------------------------------------
+                     // 🔪 宿儺 (伏魔御廚子) 嚴格判定：
+                     // 1. 食指必須朝上
+                     // 2. 小指必須貼合 (距離 < 0.12)
+                     // --------------------------------------------------
+                     else if (h1IndexUp && h2IndexUp && pinkyDist < 0.12) {
+                        currentGesture = 'sukuna';
+                     }
                   }
 
-                  results.multiHandLandmarks.forEach((landmarks) => {
-                     drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-                        color: '#FF0000',
+                  results.multiHandLandmarks.forEach((lm) => {
+                     drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, {
+                        color:
+                           currentGesture === 'jogo'
+                              ? '#FF8800'
+                              : currentGesture === 'sukuna'
+                                ? '#FF0000'
+                                : '#FFFFFF',
                         lineWidth: 3,
                      });
                   });
                }
 
-               // 介面更新
+               // 介面即時更新
                if (currentGesture === 'gojo') {
                   gestureStatus.innerText = 'ジェスチャー検出：無量空処';
                   gestureStatus.style.borderColor = '#00d4ff';
@@ -677,6 +945,11 @@
                   gestureStatus.style.borderColor = '#ff0000';
                   gestureStatus.style.color = '#ff0000';
                   gestureStatus.style.boxShadow = '0 0 15px #ff0000';
+               } else if (currentGesture === 'jogo') {
+                  gestureStatus.innerText = 'ジェスチャー検出：蓋棺鉄囲山';
+                  gestureStatus.style.borderColor = '#ff8800';
+                  gestureStatus.style.color = '#ffaa00';
+                  gestureStatus.style.boxShadow = '0 0 15px #ff5500';
                } else {
                   gestureStatus.innerText =
                      handCount > 0
