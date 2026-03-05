@@ -239,6 +239,11 @@
             color: #ffaa00;
             box-shadow: 0 0 20px #ff5500;
          }
+         #subtitle-box.megumi-highlight {
+            border-color: #00ff88;
+            color: #00ff88;
+            box-shadow: 0 0 20px #00ff88;
+         }
 
          /* ================= 領域特效層 ================= */
          #domain-overlay {
@@ -272,12 +277,11 @@
                   rgba(51, 0, 0, 0.5) 40%,
                   #000 80%
                ),
-               url('sukuna.jpg');
+               url('sukuna.jpeg');
             background-size: cover;
             background-position: center;
             background-blend-mode: lighten;
          }
-         /* 漏壺專屬岩漿背景 */
          .jogo-style {
             background:
                radial-gradient(
@@ -287,6 +291,19 @@
                   #000 80%
                ),
                url('jogo.png');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: lighten;
+         }
+         .megumi-style {
+            background:
+               radial-gradient(
+                  circle at center,
+                  rgba(0, 255, 136, 0.15) 0%,
+                  rgba(0, 20, 10, 0.7) 50%,
+                  #000 90%
+               ),
+               url('megumi.jpg');
             background-size: cover;
             background-position: center;
             background-blend-mode: lighten;
@@ -330,7 +347,7 @@
             display: inline-block;
          }
 
-         /* ================= 1. 五條悟 字體 ================= */
+         /* 五條悟 字體 */
          .gojo-style .domain-prefix,
          .gojo-style .domain-name {
             color: #fff;
@@ -363,7 +380,7 @@
             }
          }
 
-         /* ================= 2. 宿儺 字體 ================= */
+         /* 宿儺 字體 */
          .sukuna-style .domain-prefix,
          .sukuna-style .domain-name {
             color: #ff0a0a;
@@ -389,7 +406,7 @@
             }
          }
 
-         /* ================= 3. 漏壺 字體 (高溫燃燒感) ================= */
+         /* 漏壺 字體 */
          .jogo-style .domain-prefix,
          .jogo-style .domain-name {
             color: #ffcc00;
@@ -415,7 +432,33 @@
             }
          }
 
-         /* 宿儺專屬斬擊特效 */
+         /* 伏黑惠 字體 (暗影浮現) */
+         .megumi-style .domain-prefix,
+         .megumi-style .domain-name {
+            color: #00ff88;
+            text-shadow:
+               2px 2px 0px #000,
+               -2px -2px 0px #000,
+               0 0 30px #009955,
+               0 0 50px #005522;
+         }
+         .megumi-style .char-span {
+            animation: megumiReveal 1s cubic-bezier(0.2, 1, 0.2, 1) forwards;
+         }
+         @keyframes megumiReveal {
+            0% {
+               opacity: 0;
+               transform: translateY(50px) scale(0.9);
+               filter: blur(10px) brightness(0);
+            }
+            100% {
+               opacity: 1;
+               transform: translateY(0) scale(1);
+               filter: blur(0) brightness(1);
+            }
+         }
+
+         /* ================= 專屬粒子特效 ================= */
          .slash {
             position: absolute;
             top: 50%;
@@ -441,6 +484,37 @@
             }
             100% {
                transform: translate(-50%, -50%) rotate(var(--deg)) scaleX(1);
+               opacity: 0;
+            }
+         }
+
+         /* 伏黑惠專屬暗影粒子 */
+         .shadow-particle {
+            position: absolute;
+            bottom: -100px;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(
+               circle,
+               rgba(0, 0, 0, 0.9) 0%,
+               transparent 70%
+            );
+            border-radius: 50%;
+            z-index: 150;
+            pointer-events: none;
+            animation: shadowRise linear forwards;
+            filter: blur(10px);
+         }
+         @keyframes shadowRise {
+            0% {
+               transform: translateY(0) scale(1);
+               opacity: 0;
+            }
+            20% {
+               opacity: 1;
+            }
+            100% {
+               transform: translateY(-120vh) scale(3);
                opacity: 0;
             }
          }
@@ -589,9 +663,7 @@
          document.addEventListener('DOMContentLoaded', () => {
             const logToggle = document.getElementById('log-toggle');
             const logContent = document.getElementById('log-content');
-
             logToggle.addEventListener('click', () => {
-               // 切換 .show 類別來觸發 CSS 動畫
                logContent.classList.toggle('show');
                logToggle.classList.toggle('show');
             });
@@ -605,7 +677,6 @@
                   audio: true,
                });
                videoElement.srcObject = stream;
-
                initSpeech();
                initHands();
 
@@ -697,7 +768,6 @@
                text.includes('tenkai') ||
                text.includes('展开') ||
                text.includes('展開');
-
             const hasGojo =
                text.includes('無量') ||
                text.includes('むりょう') ||
@@ -705,7 +775,6 @@
                text.includes('空処') ||
                text.includes('空處') ||
                text.includes('kusho');
-
             const hasSukuna =
                text.includes('伏魔') ||
                text.includes('ふくま') ||
@@ -713,7 +782,6 @@
                text.includes('御廚子') ||
                text.includes('御厨子') ||
                text.includes('mizushi');
-
             const hasJogo =
                text.includes('蓋棺') ||
                text.includes('がいかん') ||
@@ -721,6 +789,13 @@
                text.includes('鉄囲山') ||
                text.includes('てっちせん') ||
                text.includes('tecchisen');
+            const hasMegumi =
+               text.includes('嵌合') ||
+               text.includes('かんごう') ||
+               text.includes('kangou') ||
+               text.includes('暗翳庭') ||
+               text.includes('あんえいてい') ||
+               text.includes('aneitei');
 
             if (currentGesture === 'gojo' && (hasDomain || hasGojo))
                triggerDomain('gojo');
@@ -728,6 +803,8 @@
                triggerDomain('sukuna');
             else if (currentGesture === 'jogo' && (hasDomain || hasJogo))
                triggerDomain('jogo');
+            else if (currentGesture === 'megumi' && (hasDomain || hasMegumi))
+               triggerDomain('megumi');
          }
 
          function animateText(elementId, text, delayOffset = 0) {
@@ -750,6 +827,8 @@
             if (type === 'sukuna')
                subtitleBox.classList.add('sukuna-highlight');
             if (type === 'jogo') subtitleBox.classList.add('jogo-highlight');
+            if (type === 'megumi')
+               subtitleBox.classList.add('megumi-highlight');
 
             const delayTime = 2000;
 
@@ -773,6 +852,12 @@
                   subtitleBox.innerText = '「 領域展開：蓋棺鉄囲山！」';
                   animateText('text-prefix', prefixText, 0);
                   animateText('text-name', '蓋棺鉄囲山', 2.5);
+               } else if (type === 'megumi') {
+                  overlay.classList.add('megumi-style');
+                  subtitleBox.innerText = '「 領域展開：嵌合暗翳庭！」';
+                  animateText('text-prefix', prefixText, 0);
+                  animateText('text-name', '嵌合暗翳庭', 2.5);
+                  createShadows(); // 呼叫暗影特效
                }
 
                setTimeout(() => {
@@ -781,6 +866,7 @@
                      'gojo-highlight',
                      'sukuna-highlight',
                      'jogo-highlight',
+                     'megumi-highlight',
                   );
                   subtitleBox.innerText = '呪力冷却完了...';
                   document.getElementById('text-prefix').innerHTML = '';
@@ -807,7 +893,22 @@
             }
          }
 
-         // ================= 4. 手勢辨識 (小指精準區分版) =================
+         // 伏黑惠專屬暗影生成
+         function createShadows() {
+            const container = document.getElementById('video-container');
+            for (let i = 0; i < 15; i++) {
+               setTimeout(() => {
+                  const shadow = document.createElement('div');
+                  shadow.className = 'shadow-particle';
+                  shadow.style.left = `${Math.random() * 100}vw`;
+                  shadow.style.animationDuration = `${Math.random() * 2 + 2}s`;
+                  container.appendChild(shadow);
+                  setTimeout(() => shadow.remove(), 4000);
+               }, Math.random() * 1000);
+            }
+         }
+
+         // ================= 4. 手勢辨識 =================
          let hands;
          function initHands() {
             hands = new Hands({
@@ -817,11 +918,10 @@
             hands.setOptions({
                maxNumHands: 2,
                modelComplexity: 1,
-               minDetectionConfidence: 0.4, // 降低門檻，容忍雙手重疊
+               minDetectionConfidence: 0.4,
                minTrackingConfidence: 0.4,
             });
 
-            // 輔助計算兩點距離
             function getDist(p1, p2) {
                return Math.sqrt(
                   Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2),
@@ -845,14 +945,12 @@
                   : 0;
 
                if (handCount === 1) {
-                  // ================= 單手：五條悟 =================
+                  // 單手：五條悟
                   const lm = results.multiHandLandmarks[0];
-
                   const isIndexUp = lm[8].y < lm[6].y;
                   const isMiddleUp = lm[12].y < lm[10].y;
                   const isRingDown = lm[16].y > lm[14].y;
                   const isPinkyDown = lm[20].y > lm[18].y;
-
                   const isThumbOpen = getDist(lm[4], lm[5]) > 0.05;
                   const isFingersTogether = getDist(lm[8], lm[12]) < 0.08;
 
@@ -866,42 +964,32 @@
                   ) {
                      currentGesture = 'gojo';
                   }
-
                   drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, {
                      color: '#00D4FF',
                      lineWidth: 3,
                   });
                } else if (handCount === 2) {
-                  // ================= 雙手：宿儺 vs 漏壺 =================
+                  // 雙手：宿儺 vs 漏壺 vs 伏黑惠
                   const h1 = results.multiHandLandmarks[0];
                   const h2 = results.multiHandLandmarks[1];
 
-                  // 判定雙手是否靠近
                   const wristDist = getDist(h1[0], h2[0]);
                   const knuckleDist = getDist(h1[5], h2[5]);
 
                   if (wristDist < 0.35 || knuckleDist < 0.25) {
-                     // 取得各個指尖的距離
-                     const pinkyDist = getDist(h1[20], h2[20]); // 小指距離
-                     const ringDist = getDist(h1[16], h2[16]); // 無名指距離
+                     const pinkyDist = getDist(h1[20], h2[20]);
+                     const ringDist = getDist(h1[16], h2[16]);
 
-                     // 判斷手指是否朝上 (指尖 y < 掌根 y)
                      const h1IndexUp = h1[8].y < h1[5].y;
                      const h2IndexUp = h2[8].y < h2[5].y;
                      const h1RingUp = h1[16].y < h1[13].y;
                      const h2RingUp = h2[16].y < h2[13].y;
 
-                     // 判斷食指/中指是否彎曲交扣 (指尖往下折，y 大於掌根)
+                     // 判斷食指是否彎曲 (y大於掌根)
                      const isIndexCurled =
                         h1[8].y > h1[5].y || h2[8].y > h2[5].y;
 
-                     // --------------------------------------------------
-                     // 🔥 漏壺 (蓋棺鉄囲山) 嚴格判定：
-                     // 1. 無名指尖端碰觸 (距離 < 0.08)
-                     // 2. 無名指朝上 (形成尖頭)
-                     // 3. 小指分開 (距離 > 0.1)
-                     // 4. 食指與中指彎曲交扣 (不能像宿儺一樣直立)
-                     // --------------------------------------------------
+                     // 1. 漏壺：無名指碰觸且朝上，小指分開，食指彎曲
                      if (
                         ringDist < 0.08 &&
                         h1RingUp &&
@@ -911,24 +999,23 @@
                      ) {
                         currentGesture = 'jogo';
                      }
-                     // --------------------------------------------------
-                     // 🔪 宿儺 (伏魔御廚子) 嚴格判定：
-                     // 1. 食指必須朝上
-                     // 2. 小指必須貼合 (距離 < 0.12)
-                     // --------------------------------------------------
+                     // 2. 伏黑惠：食指彎曲 (代表十指交扣)，且小指貼合
+                     else if (isIndexCurled && pinkyDist < 0.12) {
+                        currentGesture = 'megumi';
+                     }
+                     // 3. 宿儺：食指直立朝上，小指貼合
                      else if (h1IndexUp && h2IndexUp && pinkyDist < 0.12) {
                         currentGesture = 'sukuna';
                      }
                   }
 
                   results.multiHandLandmarks.forEach((lm) => {
+                     let color = '#FFFFFF';
+                     if (currentGesture === 'jogo') color = '#FF8800';
+                     if (currentGesture === 'sukuna') color = '#FF0000';
+                     if (currentGesture === 'megumi') color = '#00FF88';
                      drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, {
-                        color:
-                           currentGesture === 'jogo'
-                              ? '#FF8800'
-                              : currentGesture === 'sukuna'
-                                ? '#FF0000'
-                                : '#FFFFFF',
+                        color: color,
                         lineWidth: 3,
                      });
                   });
@@ -950,6 +1037,11 @@
                   gestureStatus.style.borderColor = '#ff8800';
                   gestureStatus.style.color = '#ffaa00';
                   gestureStatus.style.boxShadow = '0 0 15px #ff5500';
+               } else if (currentGesture === 'megumi') {
+                  gestureStatus.innerText = 'ジェスチャー検出：嵌合暗翳庭';
+                  gestureStatus.style.borderColor = '#00ff88';
+                  gestureStatus.style.color = '#00ff88';
+                  gestureStatus.style.boxShadow = '0 0 15px #00ff88';
                } else {
                   gestureStatus.innerText =
                      handCount > 0
