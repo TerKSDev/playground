@@ -292,10 +292,10 @@
          }
 
          @media (min-width: 768px) {
-            .status-bar, #subtitle-box {
+            .status-bar,
+            #subtitle-box {
                margin-bottom: 85px;
             }
-
          }
       </style>
    </head>
@@ -553,17 +553,20 @@
          }
 
          // ================= 4. 手勢辨識 =================
+         // ================= 4. 手勢辨識 (極限寬容版) =================
          let hands;
          function initHands() {
             hands = new Hands({
                locateFile: (file) =>
                   `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
             });
+
+            // 【強化點 1】：降低自信度門檻，讓 AI 即使看不清楚交疊的手指，也「硬猜」它是兩隻手
             hands.setOptions({
                maxNumHands: 2,
                modelComplexity: 1,
-               minDetectionConfidence: 0.5,
-               minTrackingConfidence: 0.5,
+               minDetectionConfidence: 0.4, // 從 0.5 降到 0.4
+               minTrackingConfidence: 0.4, // 從 0.5 降到 0.4
             });
 
             hands.onResults((results) => {
@@ -579,53 +582,109 @@
 
                currentGesture = 'none';
 
-               if (
-                  results.multiHandLandmarks &&
-                  results.multiHandLandmarks.length > 0
-               ) {
-                  results.multiHandLandmarks.forEach((landmarks) => {
-                     const isExtended =
-                        landmarks[8].y < landmarks[6].y &&
-                        landmarks[12].y < landmarks[10].y;
-                     const isCurled =
-                        landmarks[16].y > landmarks[14].y &&
-                        landmarks[20].y > landmarks[18].y;
-                     const dist = Math.sqrt(
-                        Math.pow(landmarks[8].x - landmarks[12].x, 2) +
-                           Math.pow(landmarks[8].y - landmarks[12].y, 2),
-                     );
+               const handCount = results.multiHandLandmarks
+                  ? results.multiHandLandmarks.length
+                  : 0;
 
-                     if (isExtended && isCurled && dist < 0.1)
-                        currentGesture = 'gojo';
+               // ================= 單手模式：五條悟 =================
+               if (handCount === 1) {
+                  const landmarks = results.multiHandLandmarks[0];
+
+                  const isIndexStraight = landmarks[8].y < landmarks[6].y;
+                  const isMiddleStraight = landmarks[12].y < landmarks[10].y;
+                  const isRingCurled = landmarks[16].y > landmarks[14].y;
+                  const isPinkyCurled = landmarks[20].y > landmarks[18].y;
+
+                  // 放寬大拇指距離，只要大於 0.03 就算張開
+                  const thumbDist = Math.sqrt(
+                     Math.pow(landmarks[4].x - landmarks[6].x, 2) +
+                        Math.pow(landmarks[4].y - landmarks[6].y, 2),
+                  );
+                  // 放寬食指中指交叉的容錯距離
+                  const fingerDist = Math.sqrt(
+                     Math.pow(landmarks[8].x - landmarks[12].x, 2) +
+                        Math.pow(landmarks[8].y - landmarks[12].y, 2),
+                  );
+
+                  if (
+                     isIndexStraight &&
+                     isMiddleStraight &&
+                     isRingCurled &&
+                     isPinkyCurled &&
+                     thumbDist > 0.03 &&
+                     fingerDist < 0.1
+                  ) {
+                     currentGesture = 'gojo';
+                  }
+
+                  drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+                     color: '#00D4FF',
+                     lineWidth: 3,
+                  });
+                  drawLandmarks(canvasCtx, landmarks, {
+                     color: '#FFFFFF',
+                     lineWidth: 1,
+                  });
+
+                  // ================= 雙手模式：宿儺 (究極強化版) =================
+               } else if (handCount === 2) {
+                  const h1 = results.multiHandLandmarks[0];
+                  const h2 = results.multiHandLandmarks[1];
+
+                  // 【強化點 2】：取消「手指必須絕對筆直」的要求
+                  // 因為合十時手指難免彎曲。我們改判斷「指尖(8)的位置高於掌根(0)」即可，代表手是朝上的。
+                  const h1Up = h1[8].y < h1[0].y;
+                  const h2Up = h2[8].y < h2[0].y;
+
+                  // 計算兩手掌根 (0) 的距離
+                  const wristDist = Math.sqrt(
+                     Math.pow(h1[0].x - h2[0].x, 2) +
+                        Math.pow(h1[0].y - h2[0].y, 2),
+                  );
+
+                  // 計算兩手大拇指根部 (1) 的距離 (合十時這裡非常近)
+                  const thumbBaseDist = Math.sqrt(
+                     Math.pow(h1[1].x - h2[1].x, 2) +
+                        Math.pow(h1[1].y - h2[1].y, 2),
+                  );
+
+                  // 【強化點 3】：大幅放寬合十的距離判定。
+                  // MediaPipe 有時會把貼合的兩手判定得比較遠，所以容錯值調大 (0.35)
+                  if (
+                     h1Up &&
+                     h2Up &&
+                     (wristDist < 0.35 || thumbBaseDist < 0.3)
+                  ) {
+                     currentGesture = 'sukuna';
+                  }
+
+                  results.multiHandLandmarks.forEach((landmarks) => {
                      drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-                        color: '#00FF00',
+                        color: '#FF0000',
                         lineWidth: 3,
                      });
                   });
-
-                  if (results.multiHandLandmarks.length === 2) {
-                     const h1 = results.multiHandLandmarks[0];
-                     const h2 = results.multiHandLandmarks[1];
-                     const palmDist = Math.sqrt(
-                        Math.pow(h1[1].x - h2[1].x, 2) +
-                           Math.pow(h1[1].y - h2[1].y, 2),
-                     );
-                     if (palmDist < 0.2) currentGesture = 'sukuna';
-                  }
                }
 
+               // 介面更新
                if (currentGesture === 'gojo') {
                   gestureStatus.innerText = 'ジェスチャー検出：無量空処';
                   gestureStatus.style.borderColor = '#00d4ff';
                   gestureStatus.style.color = '#00d4ff';
+                  gestureStatus.style.boxShadow = '0 0 15px #00d4ff';
                } else if (currentGesture === 'sukuna') {
                   gestureStatus.innerText = 'ジェスチャー検出：伏魔御厨子';
                   gestureStatus.style.borderColor = '#ff0000';
                   gestureStatus.style.color = '#ff0000';
+                  gestureStatus.style.boxShadow = '0 0 15px #ff0000';
                } else {
-                  gestureStatus.innerText = 'ジェスチャー検出：未結印';
+                  gestureStatus.innerText =
+                     handCount > 0
+                        ? '手勢辨識中...'
+                        : 'ジェスチャー検出：未結印';
                   gestureStatus.style.borderColor = '#333';
                   gestureStatus.style.color = '#fff';
+                  gestureStatus.style.boxShadow = 'none';
                }
                canvasCtx.restore();
             });
