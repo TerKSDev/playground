@@ -519,7 +519,7 @@
             }
          }
 
-         @media (min-width: 768px) {
+         @media (max-width: 768px) {
             .status-bar,
             #subtitle-box {
                margin-bottom: 85px;
@@ -551,6 +551,10 @@
                <span id="log-arrow">▼</span>
             </div>
             <ul class="log-list" id="log-content">
+               <li>
+                  <span class="version">v2.1</span> UI/UX Update: Enhanced
+                  background image resolution & rendering quality
+               </li>
                <li>
                   <span class="version">v2.0</span>Major Update: Added Jogo &
                   Megumi Domain Expansions
@@ -797,14 +801,23 @@
                text.includes('あんえいてい') ||
                text.includes('aneitei');
 
-            if (currentGesture === 'gojo' && (hasDomain || hasGojo))
+            // 🛡️ 嚴格手數盾牌：單手只能開五條，雙手才能開其他
+            const handCount = window.currentHandCount;
+
+            if (
+               handCount === 1 &&
+               currentGesture === 'gojo' &&
+               (hasDomain || hasGojo)
+            ) {
                triggerDomain('gojo');
-            else if (currentGesture === 'sukuna' && (hasDomain || hasSukuna))
-               triggerDomain('sukuna');
-            else if (currentGesture === 'jogo' && (hasDomain || hasJogo))
-               triggerDomain('jogo');
-            else if (currentGesture === 'megumi' && (hasDomain || hasMegumi))
-               triggerDomain('megumi');
+            } else if (handCount === 2) {
+               if (currentGesture === 'sukuna' && (hasDomain || hasSukuna))
+                  triggerDomain('sukuna');
+               else if (currentGesture === 'jogo' && (hasDomain || hasJogo))
+                  triggerDomain('jogo');
+               else if (currentGesture === 'megumi' && (hasDomain || hasMegumi))
+                  triggerDomain('megumi');
+            }
          }
 
          function animateText(elementId, text, delayOffset = 0) {
@@ -940,12 +953,29 @@
                );
 
                currentGesture = 'none';
-               const handCount = results.multiHandLandmarks
+
+               // 取得初步的偵測數量
+               let handCount = results.multiHandLandmarks
                   ? results.multiHandLandmarks.length
                   : 0;
 
+               // 🛡️ 【關鍵修復】：幻影手防禦機制
+               if (handCount === 2) {
+                  const errorDist = getDist(
+                     results.multiHandLandmarks[0][0],
+                     results.multiHandLandmarks[1][0],
+                  );
+                  // 如果兩層骨架的手腕距離小於 0.03，代表 AI 把同一隻手看成兩隻，強制把它改回 1 隻！
+                  if (errorDist < 0.03) {
+                     handCount = 1;
+                  }
+               }
+
+               // 將真實手數存到全域變數，供語音辨識使用
+               window.currentHandCount = handCount;
+
                if (handCount === 1) {
-                  // 單手：五條悟
+                  // ================= 單手：五條悟 =================
                   const lm = results.multiHandLandmarks[0];
                   const isIndexUp = lm[8].y < lm[6].y;
                   const isMiddleUp = lm[12].y < lm[10].y;
@@ -969,7 +999,7 @@
                      lineWidth: 3,
                   });
                } else if (handCount === 2) {
-                  // 雙手：宿儺 vs 漏壺 vs 伏黑惠
+                  // ================= 雙手：宿儺 vs 漏壺 vs 伏黑惠 =================
                   const h1 = results.multiHandLandmarks[0];
                   const h2 = results.multiHandLandmarks[1];
 
@@ -985,11 +1015,9 @@
                      const h1RingUp = h1[16].y < h1[13].y;
                      const h2RingUp = h2[16].y < h2[13].y;
 
-                     // 判斷食指是否彎曲 (y大於掌根)
                      const isIndexCurled =
                         h1[8].y > h1[5].y || h2[8].y > h2[5].y;
 
-                     // 1. 漏壺：無名指碰觸且朝上，小指分開，食指彎曲
                      if (
                         ringDist < 0.08 &&
                         h1RingUp &&
@@ -998,17 +1026,14 @@
                         isIndexCurled
                      ) {
                         currentGesture = 'jogo';
-                     }
-                     // 2. 伏黑惠：食指彎曲 (代表十指交扣)，且小指貼合
-                     else if (isIndexCurled && pinkyDist < 0.12) {
+                     } else if (isIndexCurled && pinkyDist < 0.12) {
                         currentGesture = 'megumi';
-                     }
-                     // 3. 宿儺：食指直立朝上，小指貼合
-                     else if (h1IndexUp && h2IndexUp && pinkyDist < 0.12) {
+                     } else if (h1IndexUp && h2IndexUp && pinkyDist < 0.12) {
                         currentGesture = 'sukuna';
                      }
                   }
 
+                  // 畫出骨架
                   results.multiHandLandmarks.forEach((lm) => {
                      let color = '#FFFFFF';
                      if (currentGesture === 'jogo') color = '#FF8800';
