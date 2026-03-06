@@ -6,14 +6,6 @@
          rel="stylesheet"
          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=assignment"
       />
-      <script
-         src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
-         crossorigin="anonymous"
-      ></script>
-      <script
-         src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
-         crossorigin="anonymous"
-      ></script>
 
       <style>
          body {
@@ -56,7 +48,7 @@
             transition: opacity 0.5s;
          }
 
-         /* ================= 左上角：Update Logs 樣式 ================= */
+         /* Update Logs 樣式 */
          .update-logs {
             position: absolute;
             top: 30px;
@@ -71,7 +63,8 @@
             backdrop-filter: blur(5px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            min-width: fit-content; /* 固定寬度，避免展開時變形 */
+            z-index: 60;
+            max-width: 350px;
          }
          .log-title {
             color: #fff;
@@ -79,71 +72,89 @@
             font-size: 0.9rem;
             margin: 0;
             letter-spacing: 2px;
-            cursor: pointer; /* 滑鼠移過去變成手指 */
+            cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
             transition: color 0.3s;
          }
          .log-title:hover {
-            color: #00d4ff; /* 滑鼠懸停發光 */
+            color: #00d4ff;
          }
          #log-arrow {
             font-size: 0.7rem;
-            transition: transform 0.3s ease; /* 箭頭旋轉動畫 */
+            transition: transform 0.3s ease;
          }
-
-         /* 列表預設隱藏 (高度為 0，透明度為 0) */
          .log-list {
             margin: 0;
             padding: 0;
             list-style: none;
             max-height: 0;
             opacity: 0;
-            overflow: hidden; /* 隱藏超出的部分 */
+            overflow-y: auto;
+            padding: 0px 4px;
             transition:
                max-height 0.4s ease,
                opacity 0.4s ease,
                margin-top 0.4s ease;
          }
          .log-list li {
-            margin-bottom: 8px;
             line-height: 1.5;
             font-size: 12px;
+            text-wrap: wrap;
+            display: flex;
+            gap: 4px;
+            margin-top: 2px;
+            margin-bottom: 8px;
          }
          .version {
             color: #00d4ff;
             font-weight: bold;
             margin-right: 6px;
          }
-
-         /* 當加入 .show 類別時，觸發展開動畫 */
          .log-list.show {
-            max-height: 200px; /* 展開的最大高度 */
+            max-height: 200px;
             opacity: 1;
-            margin-top: 15px; /* 展開時與標題拉開距離 */
+            margin-top: 15px;
          }
-         /* 標題展開時，箭頭旋轉 180 度 */
+
+         /* Custom Scrollbar for Log List */
+         .log-list::-webkit-scrollbar {
+            width: 8px;
+         }
+
+         .log-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+         }
+
+         .log-list::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+         }
+
+         .log-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+            background-clip: content-box;
+         }
          .log-title.show #log-arrow {
             transform: rotate(180deg);
          }
-
          .log-title.show {
             border-bottom: 2px solid #aaaaaa;
             padding-bottom: 8px;
          }
 
-         /* ================= 右上角：GitHub 按鈕樣式 ================= */
+         /* GitHub 按鈕樣式 */
          .github-btn {
             position: absolute;
             top: 30px;
             right: 30px;
-
-            /* 覆蓋原本 button 的置中設定 */
             margin-top: 0;
             width: auto;
             max-width: none;
-
             display: flex;
             align-items: center;
             gap: 10px;
@@ -151,21 +162,22 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: #fff;
             padding: 10px 20px;
-            border-radius: 8px; /* 圓角膠囊形狀 */
+            border-radius: 8px;
             font-size: 1rem;
             font-family: monospace;
             cursor: pointer;
             transition: all 0.3s ease;
             backdrop-filter: blur(5px);
+            z-index: 60;
          }
          .github-btn:hover {
             background: #fff;
             color: #000;
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
-            transform: translateY(-2px); /* 懸停時稍微往上浮 */
+            transform: translateY(-2px);
          }
 
-         button {
+         #start-btn {
             margin-top: 80px;
             width: calc(100% - 200px);
             max-width: 530px;
@@ -179,7 +191,7 @@
             cursor: pointer;
             transition: 0.3s;
          }
-         button:hover {
+         #start-btn:hover {
             background: #7000ff;
             color: #fff;
             box-shadow: 0 0 20px #7000ff;
@@ -206,7 +218,6 @@
             border: 2px solid #333;
             transition: 0.3s;
          }
-
          #subtitle-box {
             position: absolute;
             bottom: 120px;
@@ -222,8 +233,6 @@
             border: 1px solid rgba(0, 212, 255, 0.3);
             transition: all 0.3s ease;
          }
-
-         /* 各領域專屬字幕發光 */
          #subtitle-box.gojo-highlight {
             border-color: #00d4ff;
             color: #00d4ff;
@@ -245,7 +254,7 @@
             box-shadow: 0 0 20px #00ff88;
          }
 
-         /* ================= 領域特效層 ================= */
+         /* 領域特效層 */
          #domain-overlay {
             position: absolute;
             inset: 0;
@@ -254,8 +263,6 @@
             z-index: 100;
             transition: opacity 0.5s;
          }
-
-         /* 圖片與漸層融合背景 */
          .gojo-style {
             background:
                radial-gradient(
@@ -268,6 +275,7 @@
             background-size: cover;
             background-position: center;
             background-blend-mode: lighten;
+            image-rendering: crisp-edges;
          }
          .sukuna-style {
             background:
@@ -281,6 +289,7 @@
             background-size: cover;
             background-position: center;
             background-blend-mode: lighten;
+            image-rendering: crisp-edges;
          }
          .jogo-style {
             background:
@@ -294,6 +303,7 @@
             background-size: cover;
             background-position: center;
             background-blend-mode: lighten;
+            image-rendering: crisp-edges;
          }
          .megumi-style {
             background:
@@ -307,6 +317,7 @@
             background-size: cover;
             background-position: center;
             background-blend-mode: lighten;
+            image-rendering: crisp-edges;
          }
 
          .active#domain-overlay {
@@ -322,7 +333,7 @@
             }
          }
 
-         /* ================= 直書排版 ================= */
+         /* 直書排版 */
          .domain-prefix,
          .domain-name {
             position: absolute;
@@ -347,7 +358,6 @@
             display: inline-block;
          }
 
-         /* 五條悟 字體 */
          .gojo-style .domain-prefix,
          .gojo-style .domain-name {
             color: #fff;
@@ -380,7 +390,6 @@
             }
          }
 
-         /* 宿儺 字體 */
          .sukuna-style .domain-prefix,
          .sukuna-style .domain-name {
             color: #ff0a0a;
@@ -406,7 +415,6 @@
             }
          }
 
-         /* 漏壺 字體 */
          .jogo-style .domain-prefix,
          .jogo-style .domain-name {
             color: #ffcc00;
@@ -432,7 +440,6 @@
             }
          }
 
-         /* 伏黑惠 字體 (暗影浮現) */
          .megumi-style .domain-prefix,
          .megumi-style .domain-name {
             color: #00ff88;
@@ -458,7 +465,7 @@
             }
          }
 
-         /* ================= 專屬粒子特效 ================= */
+         /* 專屬粒子特效 */
          .slash {
             position: absolute;
             top: 50%;
@@ -488,7 +495,6 @@
             }
          }
 
-         /* 伏黑惠專屬暗影粒子 */
          .shadow-particle {
             position: absolute;
             bottom: -100px;
@@ -519,6 +525,38 @@
             }
          }
 
+         /* Optimization Notes */
+         .optimization-notes {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #ddd;
+            font-size: 0.9rem;
+            text-align: left;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 300px;
+            z-index: 60;
+         }
+         .optimization-notes h4 {
+            margin: 0 0 10px 0;
+            color: #fff;
+            font-weight: 600;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #555;
+         }
+         .optimization-notes ul {
+            margin: 0;
+            padding: 0 0 0 20px;
+         }
+         .optimization-notes li {
+            margin-bottom: 5px;
+         }
+
          @media (max-width: 768px) {
             .status-bar,
             #subtitle-box {
@@ -542,42 +580,65 @@
                   <span
                      class="material-symbols-outlined"
                      style="font-size: 18px"
+                     >assignment</span
                   >
-                     assignment
-                  </span>
                   <span>Update Logs</span>
                </div>
-
                <span id="log-arrow">▼</span>
             </div>
             <ul class="log-list" id="log-content">
                <li>
-                  <span class="version">v2.1</span> UI/UX Update: Enhanced
-                  background image resolution & rendering quality
+                  <span class="version">v3.0</span>
+                  <span
+                     >Engine Upgrade: Migrated to new MediaPipe Tasks Vision API
+                     for better interacting hands detection</span
+                  >
                </li>
                <li>
-                  <span class="version">v2.0</span>Major Update: Added Jogo &
-                  Megumi Domain Expansions
+                  <span class="version">v2.3</span>
+                  <span
+                     >Fine-tuned gesture recognition details and
+                     strictness</span
+                  >
                </li>
                <li>
-                  <span class="version">v1.4</span>Added UI for Update Logs &
-                  GitHub source link
+                  <span class="version">v2.2</span>
+                  <span
+                     >Polished user interface elements and visual feedback</span
+                  >
                </li>
                <li>
-                  <span class="version">v1.3</span>Improved accuracy for
-                  two-handed sign recognition
+                  <span class="version">v2.1</span>
+                  <span
+                     >UI/UX Update: Enhanced background image resolution &
+                     rendering quality</span
+                  >
                </li>
                <li>
-                  <span class="version">v1.2</span>Refined gesture detection
-                  logic for Gojo & Sukuna
+                  <span class="version">v2.0</span>
+                  <span
+                     >Major Update: Added Jogo & Megumi Domain Expansions</span
+                  >
                </li>
                <li>
-                  <span class="version">v1.1</span>Added cinematic visual
-                  effects for domains
+                  <span class="version">v1.4</span>
+                  <span>Added UI for Update Logs & GitHub source link</span>
                </li>
                <li>
-                  <span class="version">v1.0</span>Initial Release: Gojo &
-                  Sukuna Domains
+                  <span class="version">v1.3</span>
+                  <span>Improved accuracy for two-handed sign recognition</span>
+               </li>
+               <li>
+                  <span class="version">v1.2</span>
+                  <span>Refined gesture detection logic for Gojo & Sukuna</span>
+               </li>
+               <li>
+                  <span class="version">v1.1</span>
+                  <span>Added cinematic visual effects for domains</span>
+               </li>
+               <li>
+                  <span class="version">v1.0</span>
+                  <span>Initial Release: Gojo & Sukuna Domains</span>
                </li>
             </ul>
          </div>
@@ -615,7 +676,7 @@
             呪術回戦：領域展開
          </h1>
          <p style="font-size: 18px; color: #ccc">Chromeを使用してください！</p>
-         <button id="start-btn">授権して始める</button>
+         <button id="start-btn">系統初始化中...</button>
 
          <div
             style="
@@ -627,20 +688,27 @@
                gap: 6px;
             "
          >
-            <span style="font-weight: bold">Current Version:</span>
-            <span>v2.0</span>
+            <span style="font-weight: bold">Current Version:</span
+            ><span>v3.0</span>
+         </div>
+
+         <div class="optimization-notes">
+            <h4>Future Optimization</h4>
+            <ul>
+               <li>Use Google Teachable Machine to change current gesture engine.</li>
+               <li>Add Mahito domain</li>
+               <li>Add Megumi easter egg</li>
+            </ul>
          </div>
       </div>
 
       <div id="video-container">
          <video id="webcam" autoplay playsinline muted></video>
          <canvas id="output_canvas"></canvas>
-
          <div id="domain-overlay">
             <div class="domain-prefix" id="text-prefix"></div>
             <div class="domain-name" id="text-name"></div>
          </div>
-
          <div id="subtitle-box">システムが起動中...</div>
          <div class="status-bar">
             <div id="gesture-status" class="badge">
@@ -649,7 +717,13 @@
          </div>
       </div>
 
-      <script>
+      <script type="module">
+         import {
+            HandLandmarker,
+            FilesetResolver,
+            DrawingUtils,
+         } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3';
+
          const videoElement = document.getElementById('webcam');
          const canvasElement = document.getElementById('output_canvas');
          const canvasCtx = canvasElement.getContext('2d');
@@ -663,108 +737,220 @@
          let isListening = false;
          let recognition;
 
-         // ================= UI 互動邏輯 =================
-         document.addEventListener('DOMContentLoaded', () => {
-            const logToggle = document.getElementById('log-toggle');
-            const logContent = document.getElementById('log-content');
-            logToggle.addEventListener('click', () => {
-               logContent.classList.toggle('show');
-               logToggle.classList.toggle('show');
-            });
+         // 註冊於 Window 物件，供按鈕和語音判定存取
+         window.currentHandCount = 0;
+         window.startApp = null;
+
+         let handLandmarker = undefined;
+         let runningMode = 'VIDEO';
+         let lastVideoTime = -1;
+
+         // UI Toggle
+         document.getElementById('log-toggle').addEventListener('click', () => {
+            document.getElementById('log-content').classList.toggle('show');
+            document.getElementById('log-toggle').classList.toggle('show');
          });
 
-         // ================= 1. 啟動與防卡頓處理 =================
-         async function startApp() {
-            try {
-               const stream = await navigator.mediaDevices.getUserMedia({
-                  video: { width: 1280, height: 720 },
-                  audio: true,
-               });
-               videoElement.srcObject = stream;
-               initSpeech();
-               initHands();
+         // ================= 1. 初始化新版 AI 模型 =================
+         async function createHandLandmarker() {
+            const vision = await FilesetResolver.forVisionTasks(
+               'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm',
+            );
+            handLandmarker = await HandLandmarker.createFromOptions(vision, {
+               baseOptions: {
+                  modelAssetPath:
+                     'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+                  delegate: 'GPU',
+               },
+               runningMode: runningMode,
+               numHands: 2,
+               minHandDetectionConfidence: 0.4,
+               minHandPresenceConfidence: 0.4,
+               minTrackingConfidence: 0.4,
+            });
+            startBtn.innerText = '授權並開始';
+            startBtn.disabled = false;
 
-               let isProcessing = false;
-               let lastProcessTime = 0;
-               const FPS_LIMIT = 15;
+            // 將 startApp 綁定
+            window.startApp = async () => {
+               document.getElementById('start-screen').style.display = 'none';
+               try {
+                  const stream = await navigator.mediaDevices.getUserMedia({
+                     video: { width: 1280, height: 720 },
+                     audio: true,
+                  });
+                  videoElement.srcObject = stream;
+                  videoElement.addEventListener('loadeddata', predictWebcam);
+                  initSpeech();
+               } catch (err) {
+                  alert('起動失敗！原因：' + err.message);
+               }
+            };
+         }
 
-               async function processFrame() {
-                  const now = performance.now();
-                  if (
-                     videoElement.readyState >= 2 &&
-                     !isProcessing &&
-                     now - lastProcessTime > 1000 / FPS_LIMIT
-                  ) {
-                     isProcessing = true;
-                     lastProcessTime = now;
-                     try {
-                        await hands.send({ image: videoElement });
-                     } catch (err) {
-                        console.error('ジェスチャー検出失敗：', err);
-                     }
-                     isProcessing = false;
+         startBtn.disabled = true;
+         createHandLandmarker();
+
+         startBtn.addEventListener('click', () => {
+            if (window.startApp) window.startApp();
+         });
+
+         // 輔助計算兩點距離
+         function getDist(p1, p2) {
+            return Math.sqrt(
+               Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2),
+            );
+         }
+
+         // ================= 2. 影像預測與手勢判定邏輯 =================
+         const drawingUtils = new DrawingUtils(canvasCtx);
+
+         async function predictWebcam() {
+            canvasElement.style.width = videoElement.videoWidth;
+            canvasElement.style.height = videoElement.videoHeight;
+            canvasElement.width = videoElement.videoWidth;
+            canvasElement.height = videoElement.videoHeight;
+
+            let startTimeMs = performance.now();
+            if (lastVideoTime !== videoElement.currentTime) {
+               lastVideoTime = videoElement.currentTime;
+
+               const results = handLandmarker.detectForVideo(
+                  videoElement,
+                  startTimeMs,
+               );
+               canvasCtx.save();
+               canvasCtx.clearRect(
+                  0,
+                  0,
+                  canvasElement.width,
+                  canvasElement.height,
+               );
+
+               currentGesture = 'none';
+               let handCount = results.landmarks ? results.landmarks.length : 0;
+
+               // 幻影手防禦機制
+               if (handCount === 2) {
+                  const errorDist = getDist(
+                     results.landmarks[0][0],
+                     results.landmarks[1][0],
+                  );
+                  if (errorDist < 0.03) handCount = 1;
+               }
+               window.currentHandCount = handCount;
+
+               if (results.landmarks && results.landmarks.length > 0) {
+                  // 新版 API 繪製骨架的方式
+                  for (let i = 0; i < handCount; i++) {
+                     const landmarks = results.landmarks[i];
+                     let lineColor = '#FFFFFF';
+                     if (handCount === 1) lineColor = '#00D4FF';
+                     else if (currentGesture === 'jogo') lineColor = '#FF8800';
+                     else if (currentGesture === 'sukuna')
+                        lineColor = '#FF0000';
+                     else if (currentGesture === 'megumi')
+                        lineColor = '#00FF88';
+
+                     drawingUtils.drawConnectors(
+                        landmarks,
+                        HandLandmarker.HAND_CONNECTIONS,
+                        {
+                           color: lineColor,
+                           lineWidth: 3,
+                        },
+                     );
                   }
-                  requestAnimationFrame(processFrame);
+
+                  if (handCount === 1) {
+                     const lm = results.landmarks[0];
+                     const isIndexUp = lm[8].y < lm[6].y;
+                     const isMiddleUp = lm[12].y < lm[10].y;
+                     const isRingDown = lm[16].y > lm[14].y;
+                     const isPinkyDown = lm[20].y > lm[18].y;
+                     const isThumbOpen = getDist(lm[4], lm[5]) > 0.05;
+                     const isFingersTogether = getDist(lm[8], lm[12]) < 0.08;
+                     if (
+                        isIndexUp &&
+                        isMiddleUp &&
+                        isRingDown &&
+                        isPinkyDown &&
+                        isThumbOpen &&
+                        isFingersTogether
+                     )
+                        currentGesture = 'gojo';
+                  } else if (handCount === 2) {
+                     const h1 = results.landmarks[0];
+                     const h2 = results.landmarks[1];
+
+                     const wristDist = getDist(h1[0], h2[0]);
+                     const knuckleDist = getDist(h1[5], h2[5]);
+
+                     if (wristDist < 0.35 || knuckleDist < 0.25) {
+                        const pinkyDist = getDist(h1[20], h2[20]);
+                        const ringDist = getDist(h1[16], h2[16]);
+                        const h1IndexUp = h1[8].y < h1[5].y;
+                        const h2IndexUp = h2[8].y < h2[5].y;
+                        const h1RingUp = h1[16].y < h1[13].y;
+                        const h2RingUp = h2[16].y < h2[13].y;
+                        const isIndexCurled =
+                           h1[8].y > h1[5].y || h2[8].y > h2[5].y;
+
+                        if (
+                           ringDist < 0.08 &&
+                           h1RingUp &&
+                           h2RingUp &&
+                           pinkyDist > 0.1 &&
+                           isIndexCurled
+                        )
+                           currentGesture = 'jogo';
+                        else if (isIndexCurled && pinkyDist < 0.12)
+                           currentGesture = 'megumi';
+                        else if (h1IndexUp && h2IndexUp && pinkyDist < 0.12)
+                           currentGesture = 'sukuna';
+                     }
+                  }
                }
-               processFrame();
-            } catch (err) {
-               alert('起動失敗！原因：' + err.message);
+
+               if (currentGesture === 'gojo') {
+                  gestureStatus.innerText = 'ジェスチャー検出：無量空処';
+                  gestureStatus.style.borderColor = '#00d4ff';
+                  gestureStatus.style.color = '#00d4ff';
+                  gestureStatus.style.boxShadow = '0 0 15px #00d4ff';
+               } else if (currentGesture === 'sukuna') {
+                  gestureStatus.innerText = 'ジェスチャー検出：伏魔御厨子';
+                  gestureStatus.style.borderColor = '#ff0000';
+                  gestureStatus.style.color = '#ff0000';
+                  gestureStatus.style.boxShadow = '0 0 15px #ff0000';
+               } else if (currentGesture === 'jogo') {
+                  gestureStatus.innerText = 'ジェスチャー検出：蓋棺鉄囲山';
+                  gestureStatus.style.borderColor = '#ff8800';
+                  gestureStatus.style.color = '#ffaa00';
+                  gestureStatus.style.boxShadow = '0 0 15px #ff5500';
+               } else if (currentGesture === 'megumi') {
+                  gestureStatus.innerText = 'ジェスチャー検出：嵌合暗翳庭';
+                  gestureStatus.style.borderColor = '#00ff88';
+                  gestureStatus.style.color = '#00ff88';
+                  gestureStatus.style.boxShadow = '0 0 15px #00ff88';
+               } else {
+                  gestureStatus.innerText =
+                     handCount > 0
+                        ? '手勢辨識中...'
+                        : 'ジェスチャー検出：未結印';
+                  gestureStatus.style.borderColor = '#333';
+                  gestureStatus.style.color = '#fff';
+                  gestureStatus.style.boxShadow = 'none';
+               }
+               canvasCtx.restore();
             }
+            window.requestAnimationFrame(predictWebcam);
          }
 
-         // ================= 2. 語音辨識 =================
-         function initSpeech() {
-            const SpeechRecognition =
-               window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return alert('Chromeを使用してください！');
-
-            recognition = new SpeechRecognition();
-            recognition.lang = 'ja-JP';
-            recognition.continuous = true;
-            recognition.interimResults = true;
-
-            recognition.onstart = () => {
-               isListening = true;
-               subtitleBox.innerText = 'システムが接続しました。';
-            };
-
-            recognition.onresult = (event) => {
-               let interimTranscript = '';
-               let finalTranscript = '';
-               for (let i = event.resultIndex; i < event.results.length; ++i) {
-                  if (event.results[i].isFinal)
-                     finalTranscript += event.results[i][0].transcript;
-                  else interimTranscript += event.results[i][0].transcript;
-               }
-               const currentText = finalTranscript || interimTranscript;
-               if (currentText && !isDomainActive) {
-                  subtitleBox.innerText = `「 ${currentText} 」`;
-                  checkTrigger(currentText);
-               }
-            };
-
-            recognition.onerror = (e) => {
-               if (e.error !== 'aborted')
-                  subtitleBox.innerText = `音声干渉：${e.error}`;
-            };
-            recognition.onend = () => {
-               if (isListening)
-                  setTimeout(() => {
-                     try {
-                        recognition.start();
-                     } catch (e) {}
-                  }, 500);
-            };
-            try {
-               recognition.start();
-            } catch (e) {}
-         }
-
-         // ================= 3. 觸發與逐字動畫 =================
-         function checkTrigger(spokenText) {
+         // ================= 3. 語音與動畫功能 (全維持原樣) =================
+         window.checkTrigger = function (spokenText) {
             if (currentGesture === 'none') return;
+            const handCount = window.currentHandCount;
             const text = spokenText.toLowerCase().replace(/\s+/g, '');
-
             const hasDomain =
                text.includes('領域') ||
                text.includes('りょういき') ||
@@ -801,23 +987,63 @@
                text.includes('あんえいてい') ||
                text.includes('aneitei');
 
-            // 🛡️ 嚴格手數盾牌：單手只能開五條，雙手才能開其他
-            const handCount = window.currentHandCount;
-
             if (
                handCount === 1 &&
                currentGesture === 'gojo' &&
                (hasDomain || hasGojo)
-            ) {
-               triggerDomain('gojo');
-            } else if (handCount === 2) {
+            )
+               window.triggerDomain('gojo');
+            else if (handCount === 2) {
                if (currentGesture === 'sukuna' && (hasDomain || hasSukuna))
-                  triggerDomain('sukuna');
+                  window.triggerDomain('sukuna');
                else if (currentGesture === 'jogo' && (hasDomain || hasJogo))
-                  triggerDomain('jogo');
+                  window.triggerDomain('jogo');
                else if (currentGesture === 'megumi' && (hasDomain || hasMegumi))
-                  triggerDomain('megumi');
+                  window.triggerDomain('megumi');
             }
+         };
+
+         function initSpeech() {
+            const SpeechRecognition =
+               window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return alert('Chromeを使用してください！');
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ja-JP';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.onstart = () => {
+               isListening = true;
+               subtitleBox.innerText = 'システムが接続しました。';
+            };
+            recognition.onresult = (event) => {
+               let interimTranscript = '';
+               let finalTranscript = '';
+               for (let i = event.resultIndex; i < event.results.length; ++i) {
+                  if (event.results[i].isFinal)
+                     finalTranscript += event.results[i][0].transcript;
+                  else interimTranscript += event.results[i][0].transcript;
+               }
+               const currentText = finalTranscript || interimTranscript;
+               if (currentText && !isDomainActive) {
+                  subtitleBox.innerText = `「 ${currentText} 」`;
+                  window.checkTrigger(currentText);
+               }
+            };
+            recognition.onerror = (e) => {
+               if (e.error !== 'aborted')
+                  subtitleBox.innerText = `音声干渉：${e.error}`;
+            };
+            recognition.onend = () => {
+               if (isListening)
+                  setTimeout(() => {
+                     try {
+                        recognition.start();
+                     } catch (e) {}
+                  }, 500);
+            };
+            try {
+               recognition.start();
+            } catch (e) {}
          }
 
          function animateText(elementId, text, delayOffset = 0) {
@@ -832,10 +1058,9 @@
             });
          }
 
-         function triggerDomain(type) {
+         window.triggerDomain = function (type) {
             isDomainActive = true;
             subtitleBox.innerText = '⚡ 呪力解放中... ⚡';
-
             if (type === 'gojo') subtitleBox.classList.add('gojo-highlight');
             if (type === 'sukuna')
                subtitleBox.classList.add('sukuna-highlight');
@@ -843,12 +1068,9 @@
             if (type === 'megumi')
                subtitleBox.classList.add('megumi-highlight');
 
-            const delayTime = 2000;
-
             setTimeout(() => {
                overlay.className = 'active';
                const prefixText = '領域展開';
-
                if (type === 'gojo') {
                   overlay.classList.add('gojo-style');
                   subtitleBox.innerText = '「 領域展開：無量空処！」';
@@ -870,7 +1092,7 @@
                   subtitleBox.innerText = '「 領域展開：嵌合暗翳庭！」';
                   animateText('text-prefix', prefixText, 0);
                   animateText('text-name', '嵌合暗翳庭', 2.5);
-                  createShadows(); // 呼叫暗影特效
+                  createShadows();
                }
 
                setTimeout(() => {
@@ -886,8 +1108,8 @@
                   document.getElementById('text-name').innerHTML = '';
                   isDomainActive = false;
                }, 10000);
-            }, delayTime);
-         }
+            }, 2000);
+         };
 
          function createSlashes() {
             const container = document.getElementById('video-container');
@@ -906,7 +1128,6 @@
             }
          }
 
-         // 伏黑惠專屬暗影生成
          function createShadows() {
             const container = document.getElementById('video-container');
             for (let i = 0; i < 15; i++) {
@@ -920,170 +1141,6 @@
                }, Math.random() * 1000);
             }
          }
-
-         // ================= 4. 手勢辨識 =================
-         let hands;
-         function initHands() {
-            hands = new Hands({
-               locateFile: (file) =>
-                  `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
-            });
-            hands.setOptions({
-               maxNumHands: 2,
-               modelComplexity: 1,
-               minDetectionConfidence: 0.4,
-               minTrackingConfidence: 0.4,
-            });
-
-            function getDist(p1, p2) {
-               return Math.sqrt(
-                  Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2),
-               );
-            }
-
-            hands.onResults((results) => {
-               canvasElement.width = videoElement.videoWidth;
-               canvasElement.height = videoElement.videoHeight;
-               canvasCtx.save();
-               canvasCtx.clearRect(
-                  0,
-                  0,
-                  canvasElement.width,
-                  canvasElement.height,
-               );
-
-               currentGesture = 'none';
-
-               // 取得初步的偵測數量
-               let handCount = results.multiHandLandmarks
-                  ? results.multiHandLandmarks.length
-                  : 0;
-
-               // 🛡️ 【關鍵修復】：幻影手防禦機制
-               if (handCount === 2) {
-                  const errorDist = getDist(
-                     results.multiHandLandmarks[0][0],
-                     results.multiHandLandmarks[1][0],
-                  );
-                  // 如果兩層骨架的手腕距離小於 0.03，代表 AI 把同一隻手看成兩隻，強制把它改回 1 隻！
-                  if (errorDist < 0.03) {
-                     handCount = 1;
-                  }
-               }
-
-               // 將真實手數存到全域變數，供語音辨識使用
-               window.currentHandCount = handCount;
-
-               if (handCount === 1) {
-                  // ================= 單手：五條悟 =================
-                  const lm = results.multiHandLandmarks[0];
-                  const isIndexUp = lm[8].y < lm[6].y;
-                  const isMiddleUp = lm[12].y < lm[10].y;
-                  const isRingDown = lm[16].y > lm[14].y;
-                  const isPinkyDown = lm[20].y > lm[18].y;
-                  const isThumbOpen = getDist(lm[4], lm[5]) > 0.05;
-                  const isFingersTogether = getDist(lm[8], lm[12]) < 0.08;
-
-                  if (
-                     isIndexUp &&
-                     isMiddleUp &&
-                     isRingDown &&
-                     isPinkyDown &&
-                     isThumbOpen &&
-                     isFingersTogether
-                  ) {
-                     currentGesture = 'gojo';
-                  }
-                  drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, {
-                     color: '#00D4FF',
-                     lineWidth: 3,
-                  });
-               } else if (handCount === 2) {
-                  // ================= 雙手：宿儺 vs 漏壺 vs 伏黑惠 =================
-                  const h1 = results.multiHandLandmarks[0];
-                  const h2 = results.multiHandLandmarks[1];
-
-                  const wristDist = getDist(h1[0], h2[0]);
-                  const knuckleDist = getDist(h1[5], h2[5]);
-
-                  if (wristDist < 0.35 || knuckleDist < 0.25) {
-                     const pinkyDist = getDist(h1[20], h2[20]);
-                     const ringDist = getDist(h1[16], h2[16]);
-
-                     const h1IndexUp = h1[8].y < h1[5].y;
-                     const h2IndexUp = h2[8].y < h2[5].y;
-                     const h1RingUp = h1[16].y < h1[13].y;
-                     const h2RingUp = h2[16].y < h2[13].y;
-
-                     const isIndexCurled =
-                        h1[8].y > h1[5].y || h2[8].y > h2[5].y;
-
-                     if (
-                        ringDist < 0.08 &&
-                        h1RingUp &&
-                        h2RingUp &&
-                        pinkyDist > 0.1 &&
-                        isIndexCurled
-                     ) {
-                        currentGesture = 'jogo';
-                     } else if (isIndexCurled && pinkyDist < 0.12) {
-                        currentGesture = 'megumi';
-                     } else if (h1IndexUp && h2IndexUp && pinkyDist < 0.12) {
-                        currentGesture = 'sukuna';
-                     }
-                  }
-
-                  // 畫出骨架
-                  results.multiHandLandmarks.forEach((lm) => {
-                     let color = '#FFFFFF';
-                     if (currentGesture === 'jogo') color = '#FF8800';
-                     if (currentGesture === 'sukuna') color = '#FF0000';
-                     if (currentGesture === 'megumi') color = '#00FF88';
-                     drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, {
-                        color: color,
-                        lineWidth: 3,
-                     });
-                  });
-               }
-
-               // 介面即時更新
-               if (currentGesture === 'gojo') {
-                  gestureStatus.innerText = 'ジェスチャー検出：無量空処';
-                  gestureStatus.style.borderColor = '#00d4ff';
-                  gestureStatus.style.color = '#00d4ff';
-                  gestureStatus.style.boxShadow = '0 0 15px #00d4ff';
-               } else if (currentGesture === 'sukuna') {
-                  gestureStatus.innerText = 'ジェスチャー検出：伏魔御厨子';
-                  gestureStatus.style.borderColor = '#ff0000';
-                  gestureStatus.style.color = '#ff0000';
-                  gestureStatus.style.boxShadow = '0 0 15px #ff0000';
-               } else if (currentGesture === 'jogo') {
-                  gestureStatus.innerText = 'ジェスチャー検出：蓋棺鉄囲山';
-                  gestureStatus.style.borderColor = '#ff8800';
-                  gestureStatus.style.color = '#ffaa00';
-                  gestureStatus.style.boxShadow = '0 0 15px #ff5500';
-               } else if (currentGesture === 'megumi') {
-                  gestureStatus.innerText = 'ジェスチャー検出：嵌合暗翳庭';
-                  gestureStatus.style.borderColor = '#00ff88';
-                  gestureStatus.style.color = '#00ff88';
-                  gestureStatus.style.boxShadow = '0 0 15px #00ff88';
-               } else {
-                  gestureStatus.innerText =
-                     handCount > 0
-                        ? '手勢辨識中...'
-                        : 'ジェスチャー検出：未結印';
-                  gestureStatus.style.borderColor = '#333';
-                  gestureStatus.style.color = '#fff';
-                  gestureStatus.style.boxShadow = 'none';
-               }
-               canvasCtx.restore();
-            });
-         }
-
-         startBtn.addEventListener('click', () => {
-            document.getElementById('start-screen').style.display = 'none';
-            startApp();
-         });
       </script>
    </body>
 </html>
